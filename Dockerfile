@@ -20,5 +20,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Exponer el puerto de la app
 EXPOSE 8000
 
-# Comando por defecto para ejecutar tu app
-CMD ["python", "main.py"]
+# Comando para ejecutar la aplicación con Uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
