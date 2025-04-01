@@ -61,18 +61,47 @@ def detectar_intencion_reserva(question: str) -> bool:
     return any(re.search(palabra, question, re.IGNORECASE) for palabra in palabras_clave_reserva)
 
 
+from datetime import datetime
+from typing import Optional
+import re
+
+
 def validar_datos_reserva(data: dict) -> Optional[str]:
     """Valida los datos de reserva y devuelve un mensaje de error si algo falla."""
     fecha = data.get("fecha")
     hora = data.get("hora")
     personas = data.get("personas")
 
-    if not fecha or not re.match(r"\d{4}-\d{2}-\d{2}", fecha):  # Formato YYYY-MM-DD
+    # Validar formato de fecha (YYYY-MM-DD)
+    if not fecha or not re.match(r"\d{4}-\d{2}-\d{2}", fecha):
         return "La fecha no es válida. Usa el formato YYYY-MM-DD."
-    if not hora or not re.match(r"\d{2}:\d{2}", hora):  # Formato HH:MM
-        return "La hora no es válida. Usa el formato HH:MM."
+
+    try:
+        # Convertir la fecha proporcionada a un objeto datetime
+        fecha_provided = datetime.strptime(fecha, "%Y-%m-%d")
+        fecha_actual = datetime.now().date()
+
+        # Validar que la fecha sea mayor o igual a la fecha actual
+        if fecha_provided.date() < fecha_actual:
+            return "La fecha debe ser igual o posterior a la fecha actual."
+    except ValueError:
+        return "La fecha no es válida. Asegúrate de usar el formato correcto YYYY-MM-DD."
+
+    # Validar formato de hora (HH:MM)
+    if not hora:
+        return "La hora no puede estar vacía."
+    try:
+        # Intentar convertir la hora a un objeto time
+        datetime.strptime(hora, "%H:%M").time()
+    except ValueError:
+        return "La hora no es válida. Usa el formato HH:MM y asegúrate de que las horas y minutos sean válidos (ejemplo: 23:59)."
+
+    print(fecha+" \n")
+    print(hora+" \n")
+    print(personas+" \n")
+    # Validar número de personas
     if not personas or not personas.isdigit() or int(personas) <= 0:
-        return "El número de personas debe ser un número positivo."
+        return "El número de personas debe ser un número positivo mayor que 0."
 
     return None
 
@@ -196,11 +225,10 @@ async def chat_endpoint(user_query: UserQuery):
             state["user_data"] = {
                 "fecha": re.search(r"(\d{4}-\d{2}-\d{2})", user_query.question).group(1),
                 "hora": re.search(r"(\d{2}:\d{2})", user_query.question).group(1),
-                "personas": re.search(r"(\d+)", user_query.question).group(1)
+                "personas": re.search(r"(?<=\s)(\d{1,2})(?=\s)", user_query.question).group(1)
             }
         except Exception as e:
             print(e)
-
 
     result = chat_graph.invoke(state)
 
