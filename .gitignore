@@ -1,0 +1,18 @@
+# Archivos generados por el editor y el sistema operativo
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+.DS_Store  # Archivo específico de macOS
+Thumbs.db   # Archivo específico de Windows
+.idea
+
+# Entornos virtuales
+venv/
+ENV/
+env/
+.venv/
+virtualenv/
+
+.env
