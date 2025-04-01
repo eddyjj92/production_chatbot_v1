@@ -3,6 +3,7 @@ import re
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from langgraph.constants import END
 from pydantic import BaseModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -100,7 +101,7 @@ def procesar_reserva(state: dict) -> dict:
             "¿Necesitas ayuda con algo más? 🌟"
         )
 
-    history.append(AIMessage(content=response))
+    history.append(AIMessage(content=response), END)
     return {"response": response, "reservation_id": reservation_id}
 
 
@@ -113,23 +114,28 @@ def conversational_node(state: dict) -> dict:
     # Obtener contexto del restaurante dinámicamente
     restaurant_context = getRestaurantContext(restaurant_id)
     dishes_context = getRestaurantDishesContext(restaurant_id)
-
+    print(restaurant_context)
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-        Eres un mesero en un restaurante elegante, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Eres un mesero en el restaurante Loco Marino, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
-        - Preséntate de forma elocuente y responde en frases de máximo 30 palabras.  
-        - No hables de productos o servicios externos ni inventes información.  
-        - Siempre proporciona información nutricional cuando te la pidan.  
-        - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
-        - Incluye íconos relacionados al tema al final de cada oración.  
-        - Si el cliente quiere terminar, despídete cortésmente; de lo contrario, cierra con una pregunta de retroalimentación.  
-        - Solo procesarás reservas si el usuario proporciona **fecha (YYYY-MM-DD), hora (HH:MM) y número de personas (número entero)**. Si falta un dato, responde:  
-          "❌ Necesito la fecha, hora y número de personas para procesar tu reserva. ¿Podrías proporcionarlos en este formato: **fecha (YYYY-MM-DD), hora (HH:MM) y número de personas (número entero)**?"  
-        - Usa esta información para responder:  
-          - **Restaurante**: {restaurant_context}  
-          - **Platillos**: {dishes_context}  
-    """)
+            - Preséntate de forma elocuente y responde en frases de máximo 25 palabras.  
+            - Si te hablan de pedidos, di que solo puedes hacer reservas. 
+            - No hables de productos o servicios externos ni inventes información.  
+            - Siempre proporciona información nutricional cuando te la pidan.  
+            - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
+            - Incluye íconos relacionados al tema al final de cada oración.  
+            - Si el cliente quiere terminar, despídete cortésmente; de lo contrario, cierra con una pregunta de retroalimentación.  
+            - Solo procesarás reservas si el usuario proporciona **explícitamente** las palabras "fecha", "hora" y "personas" antes de los valores correspondientes.  
+              - Ejemplo correcto: "Quiero hacer una reserva para la fecha 2023-12-01, la hora 19:00 y para 4 personas." ✅  
+              - Ejemplo incorrecto: "Quiero hacer una reserva para 2023-12-01 a las 19:00 para 4." ❌  
+            - Si falta alguna palabra clave o dato, responde:  
+              "❌ Necesito la palabra 'fecha' seguida de la fecha (YYYY-MM-DD), la palabra 'hora' seguida de la hora (HH:MM) y la palabra 'personas' seguida del número de personas (número entero). ¿Podrías proporcionarlos en este formato?"  
+            - Si te hablan de pedidos, di que solo puedes hacer reservas.  
+            - Usa esta información para responder:  
+              - **Restaurante**: {restaurant_context}  
+              - **Platillos**: {dishes_context}  
+        """)
 
     if not history:
         history.append(system_message)
@@ -187,11 +193,15 @@ async def chat_endpoint(user_query: UserQuery):
 
     # Detectar si el usuario está proporcionando datos de reserva
     if "fecha" in user_query.question and "hora" in user_query.question and "personas" in user_query.question:
-        state["user_data"] = {
-            "fecha": re.search(r"(\d{4}-\d{2}-\d{2})", user_query.question).group(1),
-            "hora": re.search(r"(\d{2}:\d{2})", user_query.question).group(1),
-            "personas": re.search(r"(\d+)", user_query.question).group(1)
-        }
+        try:
+            state["user_data"] = {
+                "fecha": re.search(r"(\d{4}-\d{2}-\d{2})", user_query.question).group(1),
+                "hora": re.search(r"(\d{2}:\d{2})", user_query.question).group(1),
+                "personas": re.search(r"(\d+)", user_query.question).group(1)
+            }
+        except Exception as e:
+            print(e)
+
 
     result = chat_graph.invoke(state)
 
