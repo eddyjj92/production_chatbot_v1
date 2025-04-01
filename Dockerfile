@@ -9,6 +9,7 @@ COPY . /app
 
 # Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y \
+    libpq-dev \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
