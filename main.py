@@ -101,7 +101,7 @@ def procesar_reserva(state: dict) -> dict:
             "¿Necesitas ayuda con algo más? 🌟"
         )
 
-    history.append(AIMessage(content=response), END)
+    history.append(AIMessage(content=response))
     return {"response": response, "reservation_id": reservation_id}
 
 
