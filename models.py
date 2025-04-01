@@ -4,8 +4,8 @@ from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
 # Configuración de proxy si es necesario
-os.environ['HTTP_PROXY'] = 'http://localhost:5000'
-os.environ['HTTPS_PROXY'] = 'http://localhost:5000'
+#os.environ['HTTP_PROXY'] = 'http://localhost:5000'
+#os.environ['HTTPS_PROXY'] = 'http://localhost:5000'
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
