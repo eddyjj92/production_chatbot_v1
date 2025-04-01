@@ -9,3 +9,4 @@ services:
       - "8000:8000"  # Mapear el puerto del host al puerto del contenedor
     volumes:
       - .:/app  # Montar el directorio actual en /app dentro del contenedor
+    restart: unless-stopped  # Política de reinicio
