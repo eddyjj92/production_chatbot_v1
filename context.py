@@ -1,12 +1,15 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
     host="82.29.197.144",
-    database="clapzy",
-    user="postgres",
-    password="Clapzy.2025"
+    database=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USERNAME"),
+    password=os.getenv("DB_PASSWORD")
 )
 
 # Crear cursor
