@@ -14,7 +14,7 @@ from starlette.responses import FileResponse
 from starlette.staticfiles import StaticFiles
 
 from models import llm  # Tu modelo CloudflareWorkersAI
-from context import getRestaurantContext, getRestaurantDishesContext
+from context import getRestaurantContext, getRestaurantDishesContext, getRestaurantsContext
 from langchain.tools import tool
 import uuid  # Para generar IDs únicos
 
@@ -43,7 +43,7 @@ def get_or_create_history(session_id: str) -> list:
 class UserQuery(BaseModel):
     session_id: str
     question: str
-    restaurant_id: Optional[int] = 7  # ← valor por defecto
+    restaurant_id: int  # ← valor por defecto
 
 
 # 🔁 Nodo del grafo conversacional
@@ -237,6 +237,13 @@ async def chat_endpoint(user_query: UserQuery):
         "reservation_id": result.get("reservation_id"),
     }
 
+
+@app.get("/restaurants")
+async def chat_endpoint():
+    restaurants = getRestaurantsContext()
+    return {
+        "restaurants": restaurants
+    }
 
 class CustomStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):

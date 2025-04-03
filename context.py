@@ -39,3 +39,15 @@ def getRestaurantDishesContext(id):
         # Manejar errores específicos de la base de datos
         print(f"Error al acceder a los platillos: {e}")
         return None
+
+
+def getRestaurantsContext():
+    try:
+        # Ejecutar una consulta
+        cur.execute("SELECT * FROM restaurants")
+        # Obtener resultados
+        return cur.fetchall()
+    except psycopg2.Error as e:
+        # Manejar errores específicos de la base de datos
+        print(f"Error al acceder a los restaurantes: {e}")
+        return None
