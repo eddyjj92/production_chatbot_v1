@@ -143,17 +143,17 @@ def conversational_node(state: dict) -> dict:
     # Obtener contexto del restaurante dinámicamente
     restaurant_context = getRestaurantContext(restaurant_id)
     dishes_context = getRestaurantDishesContext(restaurant_id)
-    print(restaurant_context)
+    print(restaurant_context["name"])
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-            Eres un mesero en el restaurante Loco Marino, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Eres un mesero en el restaurante {restaurant_context["name"]}, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
-            - Preséntate de forma elocuente y responde en frases de máximo 35 palabras.
+            - Preséntate de forma elocuente y responde en frases de máximo 40 palabras.
             - No hables de productos o servicios externos ni inventes información. 
             - Siempre proporciona información nutricional cuando te la pidan.  
             - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
-            - Incluye íconos relacionados al tema al final de cada oración.  
-            - Si el cliente quiere terminar, despídete cortésmente; de lo contrario, cierra con una pregunta de retroalimentación.  
+            - Incluye íconos relacionados al tema al final de cada oración.
+            - Cierra con preguntas de retroalimentación variadas sobre el tema, excepto si el cliente quiere terminar la conversacion despídete cortésmente y no hagas mas preguntas.  
             - Solo procesarás reservas si el usuario proporciona **explícitamente** las palabras "fecha", "hora" y "personas" antes de los valores correspondientes.  
               - Ejemplo correcto: "Quiero hacer una reserva para la fecha 2023-12-01, la hora 19:00 y para 4 personas." ✅  
               - Ejemplo incorrecto: "Quiero hacer una reserva para 2023-12-01 a las 19:00 para 4." ❌  
@@ -162,7 +162,7 @@ def conversational_node(state: dict) -> dict:
             - Si te hablan de pedidos, di que solo puedes hacer reservas.  
             - Usa esta información para responder:  
               - **Restaurante**: {restaurant_context}  
-              - **Platillos**: {dishes_context}  
+              - **Platillos**: {dishes_context} 
         """)
 
     if not history:
