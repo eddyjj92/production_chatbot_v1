@@ -96,9 +96,9 @@ def validar_datos_reserva(data: dict) -> Optional[str]:
     except ValueError:
         return "La hora no es válida. Usa el formato HH:MM y asegúrate de que las horas y minutos sean válidos (ejemplo: 23:59)."
 
-    print(fecha+" \n")
-    print(hora+" \n")
-    print(personas+" \n")
+    print(fecha + " \n")
+    print(hora + " \n")
+    print(personas + " \n")
     # Validar número de personas
     if not personas or not personas.isdigit() or int(personas) <= 0:
         return "El número de personas debe ser un número positivo mayor que 0."
@@ -148,7 +148,7 @@ def conversational_node(state: dict) -> dict:
     system_message = SystemMessage(content=f"""
             Eres un mesero en el restaurante Loco Marino, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
-            - Preséntate de forma elocuente y responde en frases de máximo 25 palabras.  
+            - Preséntate de forma elocuente y responde en frases de máximo 35 palabras.
             - No hables de productos o servicios externos ni inventes información. 
             - Siempre proporciona información nutricional cuando te la pidan.  
             - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
@@ -232,7 +232,10 @@ async def chat_endpoint(user_query: UserQuery):
 
     result = chat_graph.invoke(state)
 
-    return {"response": result["response"], "reservation_id": result.get("reservation_id")}
+    return {
+        "response": get_or_create_history(user_query.session_id)[-1],  # result["response"]
+        "reservation_id": result.get("reservation_id"),
+    }
 
 
 class CustomStaticFiles(StaticFiles):
