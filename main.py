@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,6 +46,7 @@ class UserQuery(BaseModel):
     question: str
     restaurant_id: int  # ← valor por defecto
     token: str
+
 
 # 🔁 Nodo del grafo conversacional
 MAX_HISTORY_LENGTH = 15  # número máximo de mensajes (puedes ajustarlo)
@@ -105,6 +107,7 @@ def validar_datos_reserva(data: dict) -> Optional[str]:
 
     return None
 
+
 def procesar_reserva(state: dict) -> dict:
     """Procesa los datos de reserva y genera un ID único."""
     session_id = state["session_id"]
@@ -143,13 +146,18 @@ def procesar_reserva(state: dict) -> dict:
 
         if response.status_code == 200 or response.status_code == 201:
             print("Reserva creada:", response.json())
+            response = response.json()
+            response = (
+                f"¡Tu reserva ha sido confirmada! ✅ Aquí está tu ID de reserva (guardar para futuras consultas o "
+                f"cancelación): {response["reservation"]["uuid"]}."
+                "¿Necesitas ayuda con algo más? 🌟"
+            )
         else:
             print("Error al crear la reserva:", response.status_code, response.text)
-
-        response = (
-            f"¡Tu reserva ha sido confirmada! ✅ Aquí está tu ID de reserva: {reservation_id}. "
-            "¿Necesitas ayuda con algo más? 🌟"
-        )
+            response = (
+                f"😡 Error al crear la reserva: {response.status_code, response.text}",
+                "Inténtalo de Nuevo 😕👉😌"
+            )
 
     history.append(AIMessage(content=response))
     return {"response": response, "reservation_id": reservation_id}
@@ -268,6 +276,7 @@ async def chat_endpoint():
     return {
         "restaurants": restaurants
     }
+
 
 class CustomStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
