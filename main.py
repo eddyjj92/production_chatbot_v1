@@ -44,7 +44,7 @@ class UserQuery(BaseModel):
     session_id: str
     question: str
     restaurant_id: int  # ← valor por defecto
-
+    token: str
 
 # 🔁 Nodo del grafo conversacional
 MAX_HISTORY_LENGTH = 15  # número máximo de mensajes (puedes ajustarlo)
@@ -105,7 +105,6 @@ def validar_datos_reserva(data: dict) -> Optional[str]:
 
     return None
 
-
 def procesar_reserva(state: dict) -> dict:
     """Procesa los datos de reserva y genera un ID único."""
     session_id = state["session_id"]
@@ -125,6 +124,28 @@ def procesar_reserva(state: dict) -> dict:
             "hora": user_data["hora"],
             "personas": user_data["personas"]
         }
+
+        url = "https://www.clapzy.app/api/reservations"
+        headers = {
+            "Authorization": f"Bearer {state["token"]}",  # Reemplaza con tu token real
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+
+        payload = {
+            "date": user_data["fecha"],  # Usa una fecha válida en formato YYYY-MM-DD
+            "time": user_data["hora"],  # Hora en formato HH:MM
+            "peoples": user_data["personas"],
+            "restaurant_id": state["restaurant_id"]  # ID real del restaurante
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code == 200 or response.status_code == 201:
+            print("Reserva creada:", response.json())
+        else:
+            print("Error al crear la reserva:", response.status_code, response.text)
+
         response = (
             f"¡Tu reserva ha sido confirmada! ✅ Aquí está tu ID de reserva: {reservation_id}. "
             "¿Necesitas ayuda con algo más? 🌟"
@@ -161,6 +182,7 @@ def conversational_node(state: dict) -> dict:
             - Si falta alguna palabra clave o dato, responde:  
               "❌ Necesito la palabra 'fecha' seguida de la fecha (YYYY-MM-DD), la palabra 'hora' seguida de la hora (HH:MM) y la palabra 'personas' seguida del número de personas (número entero). ¿Podrías proporcionarlos en este formato?"  
             - Si te hablan de pedidos, di que solo puedes hacer reservas.  
+            - Responde en el mismo idioma de la pregunta del usuario.
             - Usa esta información para responder:  
               - **Restaurante**: {restaurant_context}  
               - **Platillos**: {dishes_context} 
@@ -217,7 +239,8 @@ async def chat_endpoint(user_query: UserQuery):
     state = {
         "session_id": user_query.session_id,
         "question": user_query.question,
-        "restaurant_id": user_query.restaurant_id
+        "restaurant_id": user_query.restaurant_id,
+        "token": user_query.token
     }
 
     # Detectar si el usuario está proporcionando datos de reserva
