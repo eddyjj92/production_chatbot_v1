@@ -153,6 +153,7 @@ def conversational_node(state: dict) -> dict:
             - Siempre proporciona información nutricional cuando te la pidan.  
             - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
             - Incluye íconos relacionados al tema al final de cada oración.
+            - Si te hablan de ofertas o menus, se refieren a los platillos.
             - Cierra con preguntas de retroalimentación variadas sobre el tema, excepto si el cliente quiere terminar la conversacion despídete cortésmente y no hagas mas preguntas.  
             - Solo procesarás reservas si el usuario proporciona **explícitamente** las palabras "fecha", "hora" y "personas" antes de los valores correspondientes.  
               - Ejemplo correcto: "Quiero hacer una reserva para la fecha 2023-12-01, la hora 19:00 y para 4 personas." ✅  
