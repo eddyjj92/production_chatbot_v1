@@ -12,16 +12,16 @@ if dev == 'true':
     os.environ['HTTP_PROXY'] = 'http://localhost:5000'
     os.environ['HTTPS_PROXY'] = 'http://localhost:5000'
 
-llm = CloudflareWorkersAI(
-    account_id=os.getenv("CLOUDFLARE_ACCOUNT_ID"),
-    api_token=os.getenv("CLOUDFLARE_API_KEY"),
-    model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+# llm = CloudflareWorkersAI(
+#     account_id=os.getenv("CLOUDFLARE_ACCOUNT_ID"),
+#     api_token=os.getenv("CLOUDFLARE_API_KEY"),
+#     model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+# )
+
+
+llm = ChatOpenAI(
+    api_key=api_key,
+    model="gpt-4o-mini",
+    temperature=0,
+    top_p=0.9,
 )
-
-
-#llm = ChatOpenAI(
-    #api_key=api_key,
-    #model="gpt-4o-mini",
-    #temperature=0,
-    #top_p=0.9,
-#)
