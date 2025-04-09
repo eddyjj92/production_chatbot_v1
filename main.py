@@ -16,7 +16,7 @@ from starlette.staticfiles import StaticFiles
 
 from models import llm  # Tu modelo CloudflareWorkersAI
 from context import getEstablishmentContext, getChatbotContext, getRestaurantDishesContext, getRestaurantsContext
-from aux import obtener_claves_relevantes
+from auxiliar import obtener_claves_relevantes
 from langchain.tools import tool
 import uuid  # Para generar IDs únicos
 
