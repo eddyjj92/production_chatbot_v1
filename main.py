@@ -15,7 +15,7 @@ from starlette.responses import FileResponse
 from starlette.staticfiles import StaticFiles
 
 from models import llm  # Tu modelo CloudflareWorkersAI
-from context import getRestaurantContext, getRestaurantDishesContext, getRestaurantsContext
+from context import getEstablishmentContext, getChatbotContext, getRestaurantDishesContext, getRestaurantsContext
 from langchain.tools import tool
 import uuid  # Para generar IDs únicos
 
@@ -170,12 +170,12 @@ def conversational_node(state: dict) -> dict:
     history = get_or_create_history(session_id)
 
     # Obtener contexto del restaurante dinámicamente
-    restaurant_context = getRestaurantContext(restaurant_id)
+    restaurant_context = getEstablishmentContext(restaurant_id)
     dishes_context = getRestaurantDishesContext(restaurant_id)
-    print(restaurant_context["name"])
+    chatbot_context = getChatbotContext(restaurant_id)
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-            Eres un mesero en el restaurante {restaurant_context["name"]}, atendiendo con cortesía y profesionalismo. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Te llamas {chatbot_context["name"]} y eres un mesero en el restaurante {restaurant_context["name"]}, atendiendo con un tono de comunicacion {chatbot_context["communication_tone"]}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
             - Preséntate de forma elocuente y responde en frases de máximo 40 palabras.
             - No hables de productos o servicios externos ni inventes información. 
