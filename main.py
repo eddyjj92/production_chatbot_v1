@@ -200,7 +200,7 @@ def conversational_node(state: dict) -> dict:
 
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-            Te llamas {context['establishment_context']['name']} y eres un mesero en el restaurante {context['establishment_context']['name']}, atendiendo con un tono de comunicacion {context['chatbot_context']['communication_tone']}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Te llamas {context['chatbot_context']['name']} y eres un mesero en el restaurante {context['establishment_context']['name']}, atendiendo con un tono de comunicacion {context['chatbot_context']['communication_tone']}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
             - Preséntate de forma elocuente y responde en frases de máximo 40 palabras.
             - No hables de productos o servicios externos ni inventes información. 
