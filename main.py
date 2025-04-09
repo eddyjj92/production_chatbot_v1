@@ -16,6 +16,7 @@ from starlette.staticfiles import StaticFiles
 
 from models import llm  # Tu modelo CloudflareWorkersAI
 from context import getEstablishmentContext, getChatbotContext, getRestaurantDishesContext, getRestaurantsContext
+from aux import obtener_claves_relevantes
 from langchain.tools import tool
 import uuid  # Para generar IDs únicos
 
@@ -186,9 +187,20 @@ def conversational_node(state: dict) -> dict:
     history = get_or_create_history(session_id)
     context = get_or_create_session_context(session_id, restaurant_id)
 
+    claves_relevantes = obtener_claves_relevantes(context['establishment_context'], question)
+    print(claves_relevantes)
+
+    # Filtrar solo las claves que existen en el contexto
+    datos_relevantes = {
+        clave: context['establishment_context'][clave]
+        for clave in claves_relevantes
+        if clave in context['establishment_context']
+    }
+    print(datos_relevantes)
+
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-            Te llamas {context['chatbot_context']['name']} y eres un mesero en el restaurante {context['establishment_context']['name']}, atendiendo con un tono de comunicacion {context['chatbot_context']['communication_tone']}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Te llamas {context['establishment_context']['name']} y eres un mesero en el restaurante {context['establishment_context']['name']}, atendiendo con un tono de comunicacion {context['chatbot_context']['communication_tone']}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
             - Preséntate de forma elocuente y responde en frases de máximo 40 palabras.
             - No hables de productos o servicios externos ni inventes información. 
@@ -205,7 +217,7 @@ def conversational_node(state: dict) -> dict:
             - Si te hablan de pedidos, di que solo puedes hacer reservas.  
             - Responde en el mismo idioma de la pregunta del usuario.
             - Usa esta información para responder:  
-                - **Restaurante**: {context['establishment_context']}
+                - **Restaurante**: {datos_relevantes}
                 - **Platillos**: {context['dishes_context']}
         """)
 
