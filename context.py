@@ -62,4 +62,3 @@ def getRestaurantsContext():
         # Manejar errores específicos de la base de datos
         print(f"Error al acceder a los restaurantes: {e}")
         return None
-

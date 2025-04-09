@@ -32,12 +32,28 @@ app.add_middleware(
 # 🧠 Memoria por sesión implementada manualmente
 session_store: Dict[str, list] = {}
 reservations_store: Dict[str, dict] = {}  # Almacenamiento de reservas
+session_context_store: Dict[str, dict] = {}  # Nuevo: cache de contexto por sesión
 
 
 def get_or_create_history(session_id: str) -> list:
     if session_id not in session_store:
         session_store[session_id] = []
     return session_store[session_id]
+
+
+def get_or_create_session_context(session_id: str, restaurant_id: int) -> dict:
+    context = session_context_store.get(session_id)
+
+    if not context or context.get("restaurant_id") != restaurant_id:
+        context = {
+            "restaurant_id": restaurant_id,
+            "establishment_context": getEstablishmentContext(restaurant_id),
+            "dishes_context": getRestaurantDishesContext(restaurant_id),
+            "chatbot_context": getChatbotContext(restaurant_id)
+        }
+        session_context_store[session_id] = context
+
+    return context
 
 
 # 📦 Modelo para la solicitud
@@ -168,21 +184,18 @@ def conversational_node(state: dict) -> dict:
     question = state["question"]
     restaurant_id = state["restaurant_id"]
     history = get_or_create_history(session_id)
+    context = get_or_create_session_context(session_id, restaurant_id)
 
-    # Obtener contexto del restaurante dinámicamente
-    restaurant_context = getEstablishmentContext(restaurant_id)
-    dishes_context = getRestaurantDishesContext(restaurant_id)
-    chatbot_context = getChatbotContext(restaurant_id)
     # Mensaje del sistema con contexto actualizado
     system_message = SystemMessage(content=f"""
-            Te llamas {chatbot_context["name"]} y eres un mesero en el restaurante {restaurant_context["name"]}, atendiendo con un tono de comunicacion {chatbot_context["communication_tone"]}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
+            Te llamas {context['chatbot_context']['name']} y eres un mesero en el restaurante {context['establishment_context']['name']}, atendiendo con un tono de comunicacion {context['chatbot_context']['communication_tone']}. Tu objetivo es ayudar con el menú, tomar pedidos y responder preguntas con precisión. Sigue estas reglas:  
 
             - Preséntate de forma elocuente y responde en frases de máximo 40 palabras.
             - No hables de productos o servicios externos ni inventes información. 
             - Siempre proporciona información nutricional cuando te la pidan.  
             - Si un cliente pregunta por la información nutricional de un platillo y no está en los datos del restaurante, usa tu conocimiento general para responder.  
             - Incluye íconos relacionados al tema al final de cada oración.
-            - Si te hablan de ofertas o menus, se refieren a los platillos.
+            - Si te hablan de ofertas o menus, reponde con los datos de los platillos.
             - Cierra con preguntas de retroalimentación variadas sobre el tema, excepto si el cliente quiere terminar la conversacion despídete cortésmente y no hagas mas preguntas.  
             - Solo procesarás reservas si el usuario proporciona **explícitamente** las palabras "fecha", "hora" y "personas" antes de los valores correspondientes.  
               - Ejemplo correcto: "Quiero hacer una reserva para la fecha 2023-12-01, la hora 19:00 y para 4 personas." ✅  
@@ -192,12 +205,15 @@ def conversational_node(state: dict) -> dict:
             - Si te hablan de pedidos, di que solo puedes hacer reservas.  
             - Responde en el mismo idioma de la pregunta del usuario.
             - Usa esta información para responder:  
-              - **Restaurante**: {restaurant_context}  
-              - **Platillos**: {dishes_context} 
+                - **Restaurante**: {context['establishment_context']}
+                - **Platillos**: {context['dishes_context']}
         """)
 
-    if not history:
-        history.append(system_message)
+    # Asegurar que el mensaje del sistema esté siempre actualizado y en la primera posición
+    if history and isinstance(history[0], SystemMessage):
+        history[0] = system_message
+    else:
+        history.insert(0, system_message)
 
     history.append(HumanMessage(content=question))
 
